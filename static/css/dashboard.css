@@ -1,0 +1,97 @@
+
+.top-menu .btn {
+    margin-bottom: 5px;
+    float: right;
+}
+
+.menu-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    display: none;
+}
+
+.dragStart {
+    width: 95% !important;
+}
+
+.todo {
+    min-height: 770px;
+    display: flex;
+}
+
+.todo-column {
+    min-height: fit-content;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-content: flex-start;
+}
+
+.back-defined {
+    background-color: #EF476F;
+}
+
+.back-progress {
+    background-color: #FFD166;
+}
+
+.back-complete {
+    background-color: #06D6A0;
+}
+
+.back-fun {
+    background-color: white;
+}
+
+.back-low {
+    background-color: lightblue;
+}
+
+.back-middle {
+    background-color: orange;
+}
+
+.back-emergency {
+    background-color: darkred;
+}
+
+.back-gift {
+    background-color: green !important;
+}
+
+.dis-hide {
+    display: none;
+}
+
+.dis-show {
+    display: block;
+}
+
+#comment-submit-button {
+    height: 55px;
+    width: 175px;
+    margin-top: 5px;
+}
+
+#gift-display {
+    background-color: yellow;
+    min-height: 700px;
+    height: fit-content;
+    margin-top: 30px;
+}
+
+#todo-display {
+    margin-top: 30px;
+}
+
+.row-field {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    height: fit-content !important;
+    border-radius: 5px;
+}
