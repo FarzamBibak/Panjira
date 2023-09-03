@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from datetime import datetime
 from work.models import Activity, ToDo, Gift, Comment, Pause, TaskPause
 from django.http import HttpResponse
+from django.contrib import messages
 
 
 def login_logic(request, *args, **kwargs):
@@ -20,6 +21,7 @@ def login_logic(request, *args, **kwargs):
                     print('admin logged in :)')
                     print('form is valid')
                     print('view: user: ', username, ' ,pass: ', password)
+                    messages.success(request, "خوش اومدی ادمین")
                     return redirect('/admin/')
                 else:
                     login(request, user)
@@ -31,13 +33,14 @@ def login_logic(request, *args, **kwargs):
                         activity_obj = Activity(user=request.user, start_time=start_time)
                         activity_obj.save()
                         print('user logged in!')
+                    messages.success(request, "خوش اومدی")
                     return redirect('/user_dashboard/')
             else:
                 print('user is not true')
+                messages.error(request, "نام کاربری یا رمزتو اشتباه وارد کردی")
         else:
             print('form is not valid')
-    else:
-        print('request is not posted')
+            messages.error(request, "فرم رو درست پر نکردی")
     return render(request, 'login.html')
 
 
@@ -51,8 +54,17 @@ def user_dashboard(request, *args, **kwargs):
     gift = Gift.objects.all()
     comment = Comment.objects.all()
     pause = Pause.objects.filter(user=user).last()
-    return render(request, 'user_dashboard.html',
-                  {'todo': todo, 'gift': gift, 'comment': comment, 'pause': pause})
+    context = {
+        'todo': todo,
+        'gift': gift,
+        'comment': comment,
+        'pause': pause
+    }
+    return render(
+        request,
+        'user_dashboard.html',
+        context
+    )
 
 
 def user_logout(request, *args, **kwargs):
@@ -66,6 +78,7 @@ def user_logout(request, *args, **kwargs):
         last_pause.end_time = time_now
         last_pause.save()
     logout(request)
+    messages.success(request, "خسته نباشی")
     return redirect('/login/')
 
 

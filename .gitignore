@@ -1,0 +1,6 @@
+db.sqlite3
+/myapp/migrations/
+/media/
+/Panjira/settings.py
+Pipfile
+Pipfile.lock
