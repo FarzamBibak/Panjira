@@ -74,9 +74,10 @@ def user_logout(request, *args, **kwargs):
     last_activity.end_time = time_now
     last_activity.save()
     last_pause = Pause.objects.filter(user=user).last()
-    if not last_pause.end_time:
-        last_pause.end_time = time_now
-        last_pause.save()
+    if last_pause:
+        if not last_pause.end_time:
+            last_pause.end_time = time_now
+            last_pause.save()
     logout(request)
     messages.success(request, "خسته نباشی")
     return redirect('/login/')
