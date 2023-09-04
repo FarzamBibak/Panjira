@@ -124,7 +124,6 @@ STATICFILES_DIRS = [
 
 # Associating bootstrap message tags with Django messages message tags
 MESSAGE_TAGS = {
-    # messages.DEBUG: '',
     messages.INFO: 'info',
     messages.SUCCESS: 'success',
     messages.WARNING: 'warning',
