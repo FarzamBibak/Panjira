@@ -21,7 +21,7 @@ def login_logic(request, *args, **kwargs):
                     print('admin logged in :)')
                     print('form is valid')
                     print('view: user: ', username, ' ,pass: ', password)
-                    messages.success(request, "خوش اومدی ادمین")
+                    messages.success(request, "خوش اومدی " + username)
                     return redirect('/admin/')
                 else:
                     login(request, user)
@@ -33,7 +33,7 @@ def login_logic(request, *args, **kwargs):
                         activity_obj = Activity(user=request.user, start_time=start_time)
                         activity_obj.save()
                         print('user logged in!')
-                    messages.success(request, "خوش اومدی")
+                    messages.success(request, "خوش اومدی " + username)
                     return redirect('/user_dashboard/')
             else:
                 print('user is not true')

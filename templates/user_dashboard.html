@@ -217,15 +217,64 @@
             data: data,
             success: function (data, textStatus, jqXHR) {
                 onSuccess(data);
-                console.log(data);
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 console.warn("Error");
+                console.warn(errorThrown);
             }
         });
     }
 
-    performAjaxRequest('/usefulness/')
+    performAjaxRequest('/usefulness/', {}, function (data) {
+        if (data) {
+            console.log(data)
+            console.log(data['usefulness'])
+            if (data['todo_time']) {
+                for (let i = 0; i < data['todo_time'].length; i++) {
+                    console.log(data['todo_time'][i])
+                    toastr.error('خطایی هنگام محاسبه فرمول سودمندی این تسک پیش آمده است، لطفا با ادمین تماس بگیرید', data['todo_time'][i], {
+                        "closeButton": true,
+                        "debug": false,
+                        "progressBar": true,
+                        "preventDuplicates": false,
+                        "positionClass": "toast-top-right",
+                        "onclick": true,
+                        "showDuration": "400",
+                        "hideDuration": "1000",
+                        "timeOut": "10000",
+                        "extendedTimeOut": "1000",
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    })
+                }
+            }
+            if (data['todo_pause_time']) {
+                for (let i = 0; i < data['todo_pause_time'].length; i++) {
+                    console.log(data['todo_pause_time'][i])
+                    toastr.error('خطایی هنگام محاسبه فرمول سودمندی این تسک پیش آمده است، لطفا با ادمین تماس بگیرید', data['todo_pause_time'][i], {
+                        "closeButton": true,
+                        "debug": false,
+                        "progressBar": true,
+                        "preventDuplicates": false,
+                        "positionClass": "toast-top-right",
+                        "onclick": true,
+                        "showDuration": "400",
+                        "hideDuration": "1000",
+                        "timeOut": "10000",
+                        "extendedTimeOut": "1000",
+                        "showEasing": "swing",
+                        "hideEasing": "linear",
+                        "showMethod": "fadeIn",
+                        "hideMethod": "fadeOut"
+                    })
+                }
+            }
+        } else {
+            console.error("empty data of ajax")
+        }
+    })
 
     const incomplete = $('#todoIncomplete')
     const progress = $('#todoProgress')
@@ -612,39 +661,39 @@
         let ajax_data;
         const id = ev.dataTransfer.getData('id');
 
-        {#$.ajax({#}
-        {#    url: "/drop_management",#}
-        {#    data: {#}
-        {#        id: id,#}
-        {#        position: 'd'#}
-        {#    },#}
-        {#    success: function (data, textStatus, jqXHR) {#}
-        {#        ajax_data = data#}
-        {#        console.log(data);#}
-        {#    },#}
-        {#    error: function (jqXHR, textStatus, errorThrown) {#}
-        {#        console.warn("Error");#}
-        {#    }#}
-        {# })#}
+        $.ajax({
+            url: "/drop_management",
+            data: {
+                id: id,
+                position: 'd'
+            },
+            success: function (data, textStatus, jqXHR) {
+                ajax_data = data
+                console.log(data);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.warn("Error");
+            }
+        })
 
-        {#if (ajax_data) {#}
-        {#    $('#' + id).remove()#}
-        {#    var inco = list['todo_' + id]#}
-        {#    incomplete.append(inco);#}
-        {#    $('.dragStart').on('dragstart', function (ev) {#}
-        {#        var id = $(this).attr('data-id')#}
-        {#        console.log('start and id = ', id)#}
-        {#        ev.originalEvent.dataTransfer.setData('id', id)#}
-        {#    });#}
-        {# }#}
-        $('[data-id=' + id + ']').remove()
-        const inco = list['todo_' + id];
-        incomplete.append(inco);
-        $('.dragStart').on('dragstart', function (ev) {
-            const id = $(this).attr('data-id');
-            console.log('start and id = ', id)
-            ev.originalEvent.dataTransfer.setData('id', id)
-        });
+        if (ajax_data) {
+            $('#' + id).remove()
+            var inco = list['todo_' + id]
+            incomplete.append(inco);
+            $('.dragStart').on('dragstart', function (ev) {
+                var id = $(this).attr('data-id')
+                console.log('start and id = ', id)
+                ev.originalEvent.dataTransfer.setData('id', id)
+            });
+        }
+        {#$('[data-id=' + id + ']').remove()#}
+        {#const inco = list['todo_' + id];#}
+        {#incomplete.append(inco);#}
+        {#$('.dragStart').on('dragstart', function (ev) {#}
+        {#    const id = $(this).attr('data-id');#}
+        {#    console.log('start and id = ', id)#}
+        {#    ev.originalEvent.dataTransfer.setData('id', id)#}
+        {# });#}
         console.log('dropInComplete drop!', id)
     }
 
@@ -652,38 +701,38 @@
         ev.preventDefault()
         let ajax_data;
         const id = ev.dataTransfer.getData('id');
-        {#$.ajax({#}
-        {#    url: "/drop_management",#}
-        {#    data: {#}
-        {#        id: id,#}
-        {#        position: 'p'#}
-        {#    },#}
-        {#    success: function (data, textStatus, jqXHR) {#}
-        {#        ajax_data = data#}
-        {#        console.log(data);#}
-        {#        if (ajax_data) {#}
-        {#            $('#' + id).remove()#}
-        {#            var inco = list['todo_' + id]#}
-        {#            progress.append(inco);#}
-        {#            $('.dragStart').on('dragstart', function (ev) {#}
-        {#                var id = $(this).attr('data-id')#}
-        {#                console.log('start and id = ', id)#}
-        {#                ev.originalEvent.dataTransfer.setData('id', id)#}
-        {#            });#}
-        {#        }#}
-        {#    },#}
-        {#    error: function (jqXHR, textStatus, errorThrown) {#}
-        {#        console.warn("Error");#}
-        {#    }#}
-        {# }) #}
-        $('[data-id=' + id + ']').remove()
-        const inco = list['todo_' + id];
-        progress.append(inco);
-        $('.dragStart').on('dragstart', function (ev) {
-            var id = $(this).attr('data-id')
-            console.log('start and id = ', id)
-            ev.originalEvent.dataTransfer.setData('id', id)
-        });
+        $.ajax({
+            url: "/drop_management",
+            data: {
+                id: id,
+                position: 'p'
+            },
+            success: function (data, textStatus, jqXHR) {
+                ajax_data = data
+                console.log(data);
+                if (ajax_data) {
+                    $('#' + id).remove()
+                    var inco = list['todo_' + id]
+                    progress.append(inco);
+                    $('.dragStart').on('dragstart', function (ev) {
+                        var id = $(this).attr('data-id')
+                        console.log('start and id = ', id)
+                        ev.originalEvent.dataTransfer.setData('id', id)
+                    });
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.warn("Error");
+            }
+        })
+        {#$('[data-id=' + id + ']').remove()#}
+        {#const inco = list['todo_' + id];#}
+        {#progress.append(inco);#}
+        {#$('.dragStart').on('dragstart', function (ev) {#}
+        {#    var id = $(this).attr('data-id')#}
+        {#    console.log('start and id = ', id)#}
+        {#    ev.originalEvent.dataTransfer.setData('id', id)#}
+        {# });#}
         console.log('dropProgress drop!')
     }
 
@@ -691,39 +740,39 @@
         ev.preventDefault()
         let ajax_data;
         const id = ev.dataTransfer.getData('id');
-        {#$.ajax({#}
-        {#    url: "/drop_management",#}
-        {#    data: {#}
-        {#        id: id,#}
-        {#        position: 'c'#}
-        {#    },#}
-        {#    success: function (data, textStatus, jqXHR) {#}
-        {#        ajax_data = data#}
-        {#        console.log(data);#}
-        {#        if (ajax_data) {#}
-        {#            $('#' + id).remove()#}
-        {#            var inco = list['todo_' + id]#}
-        {#            complete.append(inco);#}
-        {#            $('.dragStart').on('dragstart', function (ev) {#}
-        {#                var id = $(this).attr('data-id')#}
-        {#                console.log('start and id = ', id)#}
-        {#                ev.originalEvent.dataTransfer.setData('id', id)#}
-        {#            });#}
-        {#        }#}
-        {#    },#}
-        {#    error: function (jqXHR, textStatus, errorThrown) {#}
-        {#        console.warn("Error");#}
-        {#    }#}
-        {# }) #}
+        $.ajax({
+            url: "/drop_management",
+            data: {
+                id: id,
+                position: 'c'
+            },
+            success: function (data, textStatus, jqXHR) {
+                ajax_data = data
+                console.log(data);
+                if (ajax_data) {
+                    $('#' + id).remove()
+                    var inco = list['todo_' + id]
+                    complete.append(inco);
+                    $('.dragStart').on('dragstart', function (ev) {
+                        var id = $(this).attr('data-id')
+                        console.log('start and id = ', id)
+                        ev.originalEvent.dataTransfer.setData('id', id)
+                    });
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.warn("Error");
+            }
+        })
 
-        $('[data-id=' + id + ']').remove()
-        const inco = list['todo_' + id];
-        complete.append(inco);
-        $('.dragStart').on('dragstart', function (ev) {
-            const id = $(this).attr('data-id');
-            console.log('start and id = ', id)
-            ev.originalEvent.dataTransfer.setData('id', id)
-        });
+        {#$('[data-id=' + id + ']').remove()#}
+        {#const inco = list['todo_' + id];#}
+        {#complete.append(inco);#}
+        {#$('.dragStart').on('dragstart', function (ev) {#}
+        {#    const id = $(this).attr('data-id');#}
+        {#    console.log('start and id = ', id)#}
+        {#    ev.originalEvent.dataTransfer.setData('id', id)#}
+        {# });#}
         console.log('dropComplete drop!', ev)
     }
 
