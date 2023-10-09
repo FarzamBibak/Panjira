@@ -17,7 +17,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
       <excludeFolder url="file://$MODULE_DIR$/media" />
     </content>
-    <orderEntry type="jdk" jdkName="Pipenv (Panjira)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Pipenv (Panjira) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="aqua" level="application" />
   </component>

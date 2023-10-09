@@ -1,8 +1,25 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from work.models import ToDo, Comment, TaskPause
+from work.models import ToDo, Comment, TaskPause, Pause
 from datetime import datetime
 from django.contrib import messages
+from django.contrib.auth.models import User
+import random
+
+
+def activity(request, *args, **kwargs):
+    status = int(request.GET.get('status'))
+    if status == 0:
+        time_now = datetime.now()
+        pause_db = Pause.objects.create(user=request.user, start_time=time_now)
+        pause_db.save()
+        return HttpResponse('Pause')
+    elif status == 1:
+        pause_db = Pause.objects.filter(user=request.user).last()
+        if pause_db:
+            pause_db.end_time = datetime.now()
+            pause_db.save()
+        return HttpResponse('Play')
 
 
 def drop(request, *args, **kwargs):
@@ -46,7 +63,7 @@ def open_comments(request, *args, **kwargs):
     return JsonResponse(todo_response, safe=False)
 
 
-def comment(request, *args, **kwargs):
+def add_comment(request, *args, **kwargs):
     author = request.user.username
     comment_text = request.GET['text']
     todo_request_id = request.GET['id']
@@ -67,30 +84,31 @@ def comment(request, *args, **kwargs):
     return JsonResponse(data)
 
 
-def pause_task_activity(request, *args, **kwargs):
+def task_activity(request, *args, **kwargs):
     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-        id_api = request.GET['id']
-        time_now = datetime.now()
-        db_Todo = ToDo.objects.get(id=int(id_api))
-        task_pause_db = TaskPause.objects.create(task=db_Todo, start_time=time_now)
-        task_pause_db.save()
-        return HttpResponse('Pause')
-
-
-def continue_task_activity(request, *args, **kwargs):
-    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-        id_api = request.GET['id']
-        db_Todo = ToDo.objects.get(id=int(id_api))
-        task_pause_db = TaskPause.objects.filter(task=db_Todo).last()
-        if task_pause_db:
-            task_pause_db.end_time = datetime.now()
-            task_pause_db.save()
-        return HttpResponse('Play')
+        if request.user:
+            if request.user.is_authenticated:
+                status = int(request.GET.get('status'))
+                if status == 0:
+                    id_api = request.GET.get('id')
+                    time_now = datetime.now()
+                    db_Todo = ToDo.objects.get(id=int(id_api))
+                    task_pause_db = TaskPause.objects.create(task=db_Todo, start_time=time_now)
+                    task_pause_db.save()
+                    return HttpResponse('Pause')
+                elif status == 1:
+                    id_api = request.GET.get('id')
+                    db_Todo = ToDo.objects.get(id=int(id_api))
+                    task_pause_db = TaskPause.objects.filter(task=db_Todo).last()
+                    if task_pause_db:
+                        task_pause_db.end_time = datetime.now()
+                        task_pause_db.save()
+                    return HttpResponse('Play')
 
 
 def task_pause_check(request, *args, **kwargs):
     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-        id_api = request.GET['id']
+        id_api = request.GET.get('id')
         task_pause = TaskPause.objects.filter(task_id=id_api).last()
         if task_pause:
             if not task_pause.end_time and task_pause.start_time:
@@ -159,3 +177,15 @@ def usefulness_calculate(request, *args, **kwargs):
             'todo_time': wrong_times,
             'todo_pause_time': wrong_times_pause
         })
+
+
+def gift_lottery(request, *args, **kwargs):
+    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+        if request.user:
+            if request.user.is_authenticated and request.user.is_staff:
+                users = User.objects.all()
+                users_pk_list = {}
+                for index in users:
+                    users_pk_list[index.username] = index.id
+                print(users_pk_list)
+                return JsonResponse(users_pk_list)
