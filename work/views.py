@@ -186,6 +186,6 @@ def gift_lottery(request, *args, **kwargs):
                 users = User.objects.all()
                 users_pk_list = {}
                 for index in users:
-                    users_pk_list[index.username] = index.id
+                    users_pk_list[index.id] = index.username
                 print(users_pk_list)
                 return JsonResponse(users_pk_list)

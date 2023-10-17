@@ -87,15 +87,16 @@ def user_dashboard(request, *args, **kwargs):
 
 
 def user_logout(request, *args, **kwargs):
-    time_now = datetime.now()
-    last_activity = Activity.objects.filter(user=request.user).last()
-    last_activity.end_time = time_now
-    last_activity.save()
-    last_pause = Pause.objects.filter(user=request.user).last()
-    if last_pause:
-        if not last_pause.end_time:
-            last_pause.end_time = time_now
-            last_pause.save()
+    if not request.user.is_staff:
+        time_now = datetime.now()
+        last_activity = Activity.objects.filter(user=request.user).last()
+        last_activity.end_time = time_now
+        last_activity.save()
+        last_pause = Pause.objects.filter(user=request.user).last()
+        if last_pause:
+            if not last_pause.end_time:
+                last_pause.end_time = time_now
+                last_pause.save()
     messages.success(request, "خسته نباشی " + request.user.username)
     logout(request)
     return redirect("login")

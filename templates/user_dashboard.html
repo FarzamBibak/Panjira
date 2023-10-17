@@ -4,107 +4,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title> User Dashboard </title>
 
     {% include "includes/scripts.html" %}
     {% include "includes/styles.html" %}
+    {% include "includes/user_dashboard_styles.html" %}
 
-    <style>
-        .top-menu .btn {
-            margin-bottom: 5px;
-            float: right;
-        }
-
-        .menu-content {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background-color: #f8f9fa;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-            display: none;
-        }
-
-        .dragStart {
-            width: 95% !important;
-        }
-
-        .todo {
-            min-height: 770px;
-            display: flex;
-        }
-
-        .todo-column {
-            min-height: fit-content;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            align-content: flex-start;
-        }
-
-        .back-defined {
-            background-color: #EF476F;
-        }
-
-        .back-progress {
-            background-color: #FFD166;
-        }
-
-        .back-complete {
-            background-color: #06D6A0;
-        }
-
-        .back-fun {
-            background-color: white;
-        }
-
-        .back-low {
-            background-color: lightblue;
-        }
-
-        .back-middle {
-            background-color: orange;
-        }
-
-        .back-emergency {
-            background-color: darkred;
-        }
-
-        .back-gift {
-            background-color: green;
-        }
-
-        .dis-hide {
-            display: none;
-        }
-
-        .dis-show {
-            display: block;
-        }
-
-        #comment-submit-button {
-            height: 55px;
-            width: 175px;
-            margin-top: 5px;
-        }
-
-        #gift-display {
-            height: fit-content;
-            margin-top: 30px;
-        }
-
-        #todo-display {
-            margin-top: 30px;
-        }
-
-        .row-field {
-            margin-top: 5px;
-            margin-bottom: 5px;
-            height: fit-content !important;
-            border-radius: 5px;
-        }
-    </style>
 </head>
 <body>
 
@@ -171,6 +76,12 @@
                 <h2 class="offset-1 col-10">All gifts:</h2>
 
             </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="report-display" class="dis-hide">
+
         </div>
     </div>
 </div>
