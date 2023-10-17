@@ -1,0 +1,22 @@
+<script>
+    function performAjaxRequest(url, data, onSuccess) {
+        $.ajax({
+            url: url,
+            data: data,
+            success: function (data, textStatus, jqXHR) {
+                onSuccess(data);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.warn("Error");
+                console.warn(errorThrown);
+            }
+        });
+    }
+
+    performAjaxRequest("{% url 'lottery' %}", {}, function (data) {
+        for (const index in data) {
+            console.log(index + ":", data[index])
+        }
+        console.log(data)
+    })
+</script>
