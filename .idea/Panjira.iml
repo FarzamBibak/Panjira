@@ -16,6 +16,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
       <excludeFolder url="file://$MODULE_DIR$/media" />
+      <excludeFolder url="file://$MODULE_DIR$/work/migrations" />
     </content>
     <orderEntry type="jdk" jdkName="Pipenv (Panjira) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

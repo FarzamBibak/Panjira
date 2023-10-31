@@ -1,6 +1,6 @@
+from django.db.models import Q
 from django.shortcuts import render
 from django.urls import reverse
-
 from .forms import LoginForm
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate, login, logout
@@ -11,6 +11,7 @@ from django.contrib import messages
 
 
 def login_logic(request, *args, **kwargs):
+    context = {"form": LoginForm}
     if request.user:
         if request.user.is_authenticated:
             if request.user.is_staff:
@@ -49,7 +50,7 @@ def login_logic(request, *args, **kwargs):
         else:
             print('form is not valid')
             messages.error(request, "فرم رو درست پر نکردی")
-    return render(request, 'login.html')
+    return render(request, 'login.html', context)
 
 
 def admin_dashboard(request, *args, **kwargs):
@@ -66,13 +67,13 @@ def user_dashboard(request, *args, **kwargs):
         return redirect("admin_dashboard")
 
     if request.user.is_authenticated:
-        todo = ToDo.objects.all()
-        gift = Gift.objects.all()
+        todo = ToDo.objects.filter(Q(user=None) | Q(user=request.user))
+        gifts = Gift.objects.all()
         # comment = Comment.objects.all()
         pause = Pause.objects.filter(user=request.user).last()
         context.update({
             'todo': todo,
-            'gift': gift,
+            'gifts': gifts,
             # 'comment': comment,
             'pause': pause
         })

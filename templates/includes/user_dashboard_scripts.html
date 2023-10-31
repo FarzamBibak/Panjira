@@ -36,11 +36,35 @@
     });
 
 
+    // a function for get cookie
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
     // a function for ajax handler to prevent multiple ajax in the code
-    function performAjaxRequest(url, data, onSuccess) {
+    function performAjaxRequest(url, data, onSuccess, method = "POST") {
+        const csrftoken = getCookie('csrftoken');
+
         $.ajax({
             url: url,
+            method: method,
             data: data,
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken); // Include the CSRF token in the headers
+            },
             success: function (data, textStatus, jqXHR) {
                 onSuccess(data);
             },
@@ -453,19 +477,8 @@
         let ajax_data;
         const id = ev.dataTransfer.getData('id');
 
-        $.ajax({
-            url: "{% url 'drop_management' %}",
-            data: {
-                id: id,
-                position: 'd'
-            },
-            success: function (data, textStatus, jqXHR) {
-                ajax_data = data
-                console.log(data);
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.warn("Error");
-            }
+        performAjaxRequest("{% url 'drop_management' %}", {id: id, position: 'd'}, function (data) {
+            ajax_data = Boolean(data)
         })
 
         if (ajax_data) {
@@ -478,14 +491,6 @@
                 ev.originalEvent.dataTransfer.setData('id', id)
             });
         }
-        {#$('[data-id=' + id + ']').remove()#}
-        {#const inco = list['todo_' + id];#}
-        {#incomplete.append(inco);#}
-        {#$('.dragStart').on('dragstart', function (ev) {#}
-        {#    const id = $(this).attr('data-id');#}
-        {#    console.log('start and id = ', id)#}
-        {#    ev.originalEvent.dataTransfer.setData('id', id)#}
-        {# });#}
         console.log('dropInComplete drop!', id)
     }
 
@@ -493,38 +498,20 @@
         ev.preventDefault()
         let ajax_data;
         const id = ev.dataTransfer.getData('id');
-        $.ajax({
-            url: "{% url 'drop_management' %}",
-            data: {
-                id: id,
-                position: 'p'
-            },
-            success: function (data, textStatus, jqXHR) {
-                ajax_data = data
-                console.log(data);
-                if (ajax_data) {
-                    $('[data-id=' + id + ']').remove()
-                    var inco = list['todo_' + id]
-                    progress.append(inco);
-                    $('.dragStart').on('dragstart', function (ev) {
-                        var id = $(this).attr('data-id')
-                        console.log('start and id = ', id)
-                        ev.originalEvent.dataTransfer.setData('id', id)
-                    });
-                }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.warn("Error");
+
+        performAjaxRequest("{% url 'drop_management' %}", {id: id, position: 'p'}, function (data) {
+            ajax_data = Boolean(data)
+            if (ajax_data) {
+                $('[data-id=' + id + ']').remove()
+                var inco = list['todo_' + id]
+                progress.append(inco);
+                $('.dragStart').on('dragstart', function (ev) {
+                    var id = $(this).attr('data-id')
+                    console.log('start and id = ', id)
+                    ev.originalEvent.dataTransfer.setData('id', id)
+                });
             }
         })
-        {#$('[data-id=' + id + ']').remove()#}
-        {#const inco = list['todo_' + id];#}
-        {#progress.append(inco);#}
-        {#$('.dragStart').on('dragstart', function (ev) {#}
-        {#    var id = $(this).attr('data-id')#}
-        {#    console.log('start and id = ', id)#}
-        {#    ev.originalEvent.dataTransfer.setData('id', id)#}
-        {# });#}
         console.log('dropProgress drop!')
     }
 
@@ -532,39 +519,20 @@
         ev.preventDefault()
         let ajax_data;
         const id = ev.dataTransfer.getData('id');
-        $.ajax({
-            url: "{% url 'drop_management' %}",
-            data: {
-                id: id,
-                position: 'c'
-            },
-            success: function (data, textStatus, jqXHR) {
-                ajax_data = data
-                console.log(data);
-                if (ajax_data) {
-                    $('[data-id=' + id + ']').remove()
-                    var inco = list['todo_' + id]
-                    complete.append(inco);
-                    $('.dragStart').on('dragstart', function (ev) {
-                        var id = $(this).attr('data-id')
-                        console.log('start and id = ', id)
-                        ev.originalEvent.dataTransfer.setData('id', id)
-                    });
-                }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.warn("Error");
+
+        performAjaxRequest("{% url 'drop_management' %}", {id: id, position: 'c'}, function (data) {
+            ajax_data = Boolean(data)
+            if (ajax_data) {
+                $('[data-id=' + id + ']').remove()
+                var inco = list['todo_' + id]
+                complete.append(inco);
+                $('.dragStart').on('dragstart', function (ev) {
+                    var id = $(this).attr('data-id')
+                    console.log('start and id = ', id)
+                    ev.originalEvent.dataTransfer.setData('id', id)
+                });
             }
         })
-
-        {#$('[data-id=' + id + ']').remove()#}
-        {#const inco = list['todo_' + id];#}
-        {#complete.append(inco);#}
-        {#$('.dragStart').on('dragstart', function (ev) {#}
-        {#    const id = $(this).attr('data-id');#}
-        {#    console.log('start and id = ', id)#}
-        {#    ev.originalEvent.dataTransfer.setData('id', id)#}
-        {# });#}
         console.log('dropComplete drop!', ev)
     }
 
@@ -621,21 +589,17 @@
     function commentOnClick(id) {
         idGetBack = id
         console.log('get data id: ', id)
-        $.ajax({
-            url: "{% url 'open_comments' %}",
-            data: {
-                id: id
-            },
-            success: function (data, textStatus, jqXHR) {
-                console.log(data);
-                var author, text, time;
-                if ($('#comment').hasClass('dis-hide')) {
-                    $('#comment').removeClass('dis-hide')
-                    for (let i = 0; i < data.length; i++) {
-                        author = data[i].author
-                        text = data[i].text
-                        time = data[i].timestamp
-                        $('.card-body').append(`
+
+        performAjaxRequest("{% url 'open_comments' %}", {id: id}, function (data) {
+            console.log(data);
+            var author, text, time;
+            if ($('#comment').hasClass('dis-hide')) {
+                $('#comment').removeClass('dis-hide')
+                for (let i = 0; i < data.length; i++) {
+                    author = data[i].author
+                    text = data[i].text
+                    time = data[i].timestamp
+                    $('.card-body').append(`
                         <div class="media">
                             <div class="media-body">
                                 <h6 class="mt-0">` + author + `</h6>
@@ -645,17 +609,13 @@
                             <hr>
                         </div>
                     `)
-                    }
-                    console.log('if is true')
-                } else if (!$('#comment').hasClass('dis-hide')) {
-                    $('.media').remove()
-                    $('#comment').addClass('dis-hide')
-                    console.log('if is false')
-                } else {
-                    console.warn("Error");
                 }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
+                console.log('if is true')
+            } else if (!$('#comment').hasClass('dis-hide')) {
+                $('.media').remove()
+                $('#comment').addClass('dis-hide')
+                console.log('if is false')
+            } else {
                 console.warn("Error");
             }
         })
@@ -666,31 +626,22 @@
         event.preventDefault()
         const text = $('#comment-text').val();
         $('#comment-text').val('')
-        $.ajax({
-            url: "{% url 'add_comment' %}",
-            data: {
-                text: text,
-                id: idGetBack
-            },
-            success: function (data, textStatus, jqXHR) {
-                console.log(data);
-                var author = data.author
-                var text = data.text
-                var time = data.time
-                $('.card-body').append(`
-                    <div class="media">
-                        <div class="media-body">
-                            <h6 class="mt-0">` + author + `</h6>
-                            <p>` + text + `</p>
-                            <span class="text-muted"><i class="far fa-clock"></i> ` + time + ` </span>
-                        </div>
-                        <hr>
+
+        performAjaxRequest("{% url 'add_comment' %}", {text: text, id: idGetBack}, function (data) {
+            console.log(data);
+            var author = data.author
+            var text = data.text
+            var time = data.time
+            $('.card-body').append(`
+                <div class="media">
+                    <div class="media-body">
+                        <h6 class="mt-0">` + author + `</h6>
+                        <p>` + text + `</p>
+                        <span class="text-muted"><i class="far fa-clock"></i> ` + time + ` </span>
                     </div>
-                `)
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.warn("Error");
-            }
+                    <hr>
+                </div>
+            `)
         })
     })
 
@@ -760,8 +711,8 @@
     const giftSelf = $('#gift-self')
     const giftAll = $('#gift-all')
 
-    {% for index in gift %}
-        {% if index.user == false %}
+    {% for index in gifts %}
+        {% if index.user == request.user %}
             giftSelf.append(`
                 <div class="container">
                     <div class="row justify-content-center">
@@ -776,7 +727,7 @@
                     </div>
                 </div>
             `)
-        {% elif index.user != false %}
+        {% elif index.user == false %}
             giftAll.append(`
                 <div class="container">
                     <div class="row justify-content-center">

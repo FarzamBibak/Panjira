@@ -1,14 +1,17 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
+
 from work.models import ToDo, Comment, TaskPause, Pause
 from datetime import datetime
 from django.contrib import messages
 from django.contrib.auth.models import User
 import random
+from account.forms import *
 
 
 def activity(request, *args, **kwargs):
-    status = int(request.GET.get('status'))
+    status = int(request.POST.get('status'))
     if status == 0:
         time_now = datetime.now()
         pause_db = Pause.objects.create(user=request.user, start_time=time_now)
@@ -23,11 +26,10 @@ def activity(request, *args, **kwargs):
 
 
 def drop(request, *args, **kwargs):
-    id_api = request.GET['id']
-    print(id_api)
+    id_api = request.POST.get('id')
     db = ToDo.objects.get(id=id_api)
     position_db = db.stage
-    position_api = request.GET['position']
+    position_api = request.POST['position']
     if position_db != position_api:
         if position_db == 'd' and position_api == 'p':
             if not db.user:
@@ -40,15 +42,15 @@ def drop(request, *args, **kwargs):
             db.done_time = datetime.now()
             db.save()
         else:
-            return HttpResponse('None')
+            return HttpResponse('')
         return HttpResponse(position_db)
     else:
-        return HttpResponse('None')
+        return HttpResponse('')
 
 
 def open_comments(request, *args, **kwargs):
     todo_response = []
-    todo_request_id = request.GET['id']
+    todo_request_id = request.POST['id']
     author = request.user.username
     todo_selected = Comment.objects.filter(todo__id=todo_request_id)
     for i in range(len(todo_selected)):
@@ -65,8 +67,8 @@ def open_comments(request, *args, **kwargs):
 
 def add_comment(request, *args, **kwargs):
     author = request.user.username
-    comment_text = request.GET['text']
-    todo_request_id = request.GET['id']
+    comment_text = request.POST.get('text')
+    todo_request_id = request.POST.get('id')
     print(todo_request_id)
     todo_db = ToDo.objects.get(id=todo_request_id)
     comment_db = Comment(
@@ -88,16 +90,16 @@ def task_activity(request, *args, **kwargs):
     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
         if request.user:
             if request.user.is_authenticated:
-                status = int(request.GET.get('status'))
+                status = int(request.POST.get('status'))
                 if status == 0:
-                    id_api = request.GET.get('id')
+                    id_api = request.POST.get('id')
                     time_now = datetime.now()
                     db_Todo = ToDo.objects.get(id=int(id_api))
                     task_pause_db = TaskPause.objects.create(task=db_Todo, start_time=time_now)
                     task_pause_db.save()
                     return HttpResponse('Pause')
                 elif status == 1:
-                    id_api = request.GET.get('id')
+                    id_api = request.POST.get('id')
                     db_Todo = ToDo.objects.get(id=int(id_api))
                     task_pause_db = TaskPause.objects.filter(task=db_Todo).last()
                     if task_pause_db:
@@ -108,7 +110,7 @@ def task_activity(request, *args, **kwargs):
 
 def task_pause_check(request, *args, **kwargs):
     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-        id_api = request.GET.get('id')
+        id_api = request.POST.get('id')
         task_pause = TaskPause.objects.filter(task_id=id_api).last()
         if task_pause:
             if not task_pause.end_time and task_pause.start_time:
@@ -120,9 +122,9 @@ def usefulness_calculate(request, *args, **kwargs):
     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
         wrong_times = []
         wrong_times_pause = []
-        get_condition = request.GET.get('task', None)
+        get_condition = request.POST.get('task', None)
         if get_condition:
-            task = request.GET['task']
+            task = request.POST['task']
             current_task = ToDo.objects.filter(title=task).first()
             current_task_pause = TaskPause.objects.filter(task=current_task).all()
             if current_task.done_time > current_task.start_time:

@@ -5,3 +5,4 @@ db.sqlite3
 /Panjira/settings.py
 Pipfile
 Pipfile.lock
+env_var.json
