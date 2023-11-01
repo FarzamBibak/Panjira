@@ -11,7 +11,7 @@ from django.contrib import messages
 
 
 def login_logic(request, *args, **kwargs):
-    context = {"form": LoginForm}
+    context = {"form": LoginForm()}
     if request.user:
         if request.user.is_authenticated:
             if request.user.is_staff:
