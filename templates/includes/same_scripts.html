@@ -1,0 +1,38 @@
+<script>
+    // panels display handler
+    $('#todo-btn').on('click', function () {
+        $('#todo-display').toggleClass('dis-hide')
+
+        if (!$('#gift-display').hasClass('dis-hide')) {
+            $('#gift-display').addClass('dis-hide')
+        }
+
+        if (!$('#report-display').hasClass('dis-hide')) {
+            $('#report-display').addClass('dis-hide')
+        }
+    })
+
+    $('#gift-btn').on('click', function () {
+        $('#gift-display').toggleClass('dis-hide')
+
+        if (!$('#todo-display').hasClass('dis-hide')) {
+            $('#todo-display').addClass('dis-hide')
+        }
+
+        if (!$('#report-display').hasClass('dis-hide')) {
+            $('#report-display').addClass('dis-hide')
+        }
+    })
+
+    $('#report-btn').on('click', function () {
+        $('#gift-display').toggleClass('dis-hide')
+
+        if (!$('#todo-display').hasClass('dis-hide')) {
+            $('#todo-display').addClass('dis-hide')
+        }
+
+        if (!$('#gift-display').hasClass('dis-hide')) {
+            $('#gift-display').addClass('dis-hide')
+        }
+    })
+</script>

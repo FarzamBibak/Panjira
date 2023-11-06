@@ -1,0 +1,83 @@
+{% extends "base_dashboard.html" %}
+
+{% block style %}
+    <style></style>
+{% endblock %}
+
+{% block navbar %}
+    <li class="nav-item" style="margin-left: 60px"><a class="nav-link" id="todo-btn">ToDo</a></li>
+    <li class="nav-item"><a class="nav-link" id="gift-btn">Gifts</a></li>
+    <li class="nav-item"><a class="nav-link" id="report-btn">Reports</a></li>
+    {% if not request.user.is_staff %}
+        <li class="nav-item align-self-center" style="position:absolute; right: 103px">
+            <div class="play-pause">
+                <button id="playButton" class="btn btn-success" style="display: none;"><i class="fa fa-play"></i>
+                </button>
+                <button id="pauseButton" class="btn btn-primary"><i class="fa fa-pause"></i></button>
+            </div>
+        </li>
+    {% endif %}
+    <li class="nav-item" style="position: absolute; right: 5px">
+    <a class="nav-link" href="{% url 'logout' %}">
+        Logout
+    </a>
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div id="todo-display" class="dis-hide">
+            <p>tesssst</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        // a function for get cookie
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
+        // a function for ajax handler to prevent multiple ajax in the code
+        function performAjaxRequest(url, data, onSuccess, method = "POST") {
+            const csrftoken = getCookie('csrftoken');
+
+            $.ajax({
+                url: url,
+                method: method,
+                data: data,
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken); // Include the CSRF token in the headers
+                },
+                success: function (data, textStatus, jqXHR) {
+                    onSuccess(data);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.warn("Error");
+                    console.warn(errorThrown);
+                }
+            });
+        }
+
+
+        performAjaxRequest("{% url 'lottery' %}", {}, function (data) {
+            for (const index in data) {
+                console.log(index + ":", data[index])
+            }
+            console.log(data)
+        })
+    </script>
+{% endblock %}

@@ -54,10 +54,12 @@ def login_logic(request, *args, **kwargs):
 
 
 def admin_dashboard(request, *args, **kwargs):
+    context = {}
     if not request.user.is_staff:
         messages.warning(request, "نمیتونی داشبورد مدیر و ببینی")
         return redirect("user_dashboard")
-    return render(request, 'admin_dashboard.html')
+    context["user"] = User.objects.all()
+    return render(request, 'extends/admin_dashboard.html', context)
 
 
 def user_dashboard(request, *args, **kwargs):
@@ -79,7 +81,7 @@ def user_dashboard(request, *args, **kwargs):
         })
         return render(
             request,
-            'user_dashboard.html',
+            'extends/user_dashboard.html',
             context
         )
     else:

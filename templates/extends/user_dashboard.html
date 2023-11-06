@@ -1,605 +1,665 @@
-<script>
-    // navbar handler part
-    class Menu {
-        constructor(elm) {
-            this.elm_persecutor = elm.querySelector('.persecutor');
-            this.elm_options = elm.querySelector('.options');
-            this.elms_option = elm.querySelectorAll('.options li');
-            this.option = null;
+{% extends "base_dashboard.html" %}
 
-            this.elms_option.forEach((elm, idx) => elm.addEventListener('click', this.persecute.bind(this, idx)));
-            this.persecute(0);
-        }
+{% block style %}
+    <style></style>
+{% endblock %}
 
-        persecute(idx, evt) {
-            console.log('persecute', this.option, idx, this.option !== idx);
-            if (this.option !== idx) requestAnimationFrame(() => {
-                const elm_target = this.elms_option[idx];
-                const w = this.elm_options.offsetWidth;
-                const x1 = elm_target.offsetLeft;
-                const x2 = w - x1 - elm_target.offsetWidth;
-                console.log(x1, x2);
-                const goL = this.option !== null && this.option > idx;
-                const goR = this.option !== null && this.option < idx;
-                console.log(goL, goR);
-                this.option = idx;
-                if (goR) this.elm_persecutor.style.transition = 'left 375ms ease-in, right 375ms ease-out';
-                if (goL) this.elm_persecutor.style.transition = 'right 375ms ease-in, left 375ms ease-out';
-                this.elm_persecutor.style.left = x1 + 'px';
-                this.elm_persecutor.style.right = x2 + 'px';
-            });
-        }
-    }
+{% block navbar %}
+    <li class="nav-item" style="margin-left: 60px"><a class="nav-link" id="todo-btn">ToDo</a></li>
+    <li class="nav-item"><a class="nav-link" id="gift-btn">Gifts</a></li>
+    <li class="nav-item"><a class="nav-link" id="report-btn">Reports</a></li>
+    {% if not request.user.is_staff %}
+        <li class="nav-item align-self-center" style="position:absolute; right: 103px">
+            <div class="play-pause">
+                <button id="playButton" class="btn btn-success" style="display: none;"><i class="fa fa-play"></i>
+                </button>
+                <button id="pauseButton" class="btn btn-primary"><i class="fa fa-pause"></i></button>
+            </div>
+        </li>
+    {% endif %}
+    <li class="nav-item" style="position: absolute; right: 5px">
+    <a class="nav-link" href="{% url 'logout' %}">
+        Logout
+    </a>
+{% endblock %}
 
-    window.addEventListener('load', () => {
-        document.querySelectorAll('.menu').forEach(elm => new Menu(elm));
-    });
+{% block body %}
+    <div class="row">
+        <div id="todo-display" class="dis-hide">
+            {# todo #}
+            <div class="row">
+                <div class="todo" id="todo">
+                    <div id="todoIncomplete" ondrop="dropInComplete(event)" ondragover="dragoverInComplete(event)"
+                         class="todo-column back-defined col-3">
 
+                    </div>
+                    <div id="todoProgress" ondrop="dropProgress(event)" ondragover="dragoverProgress(event)"
+                         class="todo-column back-progress col-3 offset-1">
 
-    // a function for get cookie
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+                    </div>
+                    <div id="todoComplete" ondrop="dropComplete(event)" ondragover="dragoverComplete(event)"
+                         class="todo-column back-complete col-3 offset-1">
+
+                    </div>
+                </div>
+            </div>
+            {# comment #}
+            <div class="row">
+                <div id="comment" class="comment dis-hide col-11 align-items-center">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Comments</h5>
+                        </div>
+                        <div class="card-body">
+
+                        </div>
+                        <div class="card-footer">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="comment-text">Add a comment:</label>
+                                    <textarea class="form-control" id="comment-text" rows="3" required
+                                              name="comment-text"></textarea>
+                                </div>
+                                <button id="comment-submit-button" type="submit" class="btn btn-primary"><i
+                                        class="fa fa-comment"></i> Submit
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="gift-display" class="dis-hide">
+            {# gift #}
+            <div id="gift-self">
+                <h2 class="offset-1 col-10">Self gifts:</h2>
+
+            </div>
+            <div id="gift-all">
+                <h2 class="offset-1 col-10">All gifts:</h2>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="report-display" class="dis-hide">
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        // navbar handler part
+        class Menu {
+            constructor(elm) {
+                this.elm_persecutor = elm.querySelector('.persecutor');
+                this.elm_options = elm.querySelector('.options');
+                this.elms_option = elm.querySelectorAll('.options li');
+                this.option = null;
+
+                this.elms_option.forEach((elm, idx) => elm.addEventListener('click', this.persecute.bind(this, idx)));
+                this.persecute(0);
+            }
+
+            persecute(idx, evt) {
+                console.log('persecute', this.option, idx, this.option !== idx);
+                if (this.option !== idx) requestAnimationFrame(() => {
+                    const elm_target = this.elms_option[idx];
+                    const w = this.elm_options.offsetWidth;
+                    const x1 = elm_target.offsetLeft;
+                    const x2 = w - x1 - elm_target.offsetWidth;
+                    console.log(x1, x2);
+                    const goL = this.option !== null && this.option > idx;
+                    const goR = this.option !== null && this.option < idx;
+                    console.log(goL, goR);
+                    this.option = idx;
+                    if (goR) this.elm_persecutor.style.transition = 'left 375ms ease-in, right 375ms ease-out';
+                    if (goL) this.elm_persecutor.style.transition = 'right 375ms ease-in, left 375ms ease-out';
+                    this.elm_persecutor.style.left = x1 + 'px';
+                    this.elm_persecutor.style.right = x2 + 'px';
+                });
             }
         }
-        return cookieValue;
-    }
 
-
-    // a function for ajax handler to prevent multiple ajax in the code
-    function performAjaxRequest(url, data, onSuccess, method = "POST") {
-        const csrftoken = getCookie('csrftoken');
-
-        $.ajax({
-            url: url,
-            method: method,
-            data: data,
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken); // Include the CSRF token in the headers
-            },
-            success: function (data, textStatus, jqXHR) {
-                onSuccess(data);
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.warn("Error");
-                console.warn(errorThrown);
-            }
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.menu').forEach(elm => new Menu(elm));
         });
-    }
 
 
-    // get the usefulness value from backend
-    performAjaxRequest("{% url 'usefulness' %}", {}, function (data) {
-        if (data) {
-            console.log(data)
-            console.log(data['usefulness'])
-            if (data['todo_time']) {
-                for (let i = 0; i < data['todo_time'].length; i++) {
-                    console.log(data['todo_time'][i])
-                    toastr.error('خطایی هنگام محاسبه فرمول سودمندی این تسک پیش آمده است، لطفا با ادمین تماس بگیرید', data['todo_time'][i], {
-                        "closeButton": true,
-                        "debug": false,
-                        "progressBar": true,
-                        "preventDuplicates": false,
-                        "positionClass": "toast-top-right",
-                        "onclick": true,
-                        "showDuration": "400",
-                        "hideDuration": "1000",
-                        "timeOut": "10000",
-                        "extendedTimeOut": "1000",
-                        "showEasing": "swing",
-                        "hideEasing": "linear",
-                        "showMethod": "fadeIn",
-                        "hideMethod": "fadeOut"
-                    })
+        // a function for get cookie
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
                 }
             }
-            if (data['todo_pause_time']) {
-                for (let i = 0; i < data['todo_pause_time'].length; i++) {
-                    console.log(data['todo_pause_time'][i])
-                    toastr.error('خطایی هنگام محاسبه فرمول سودمندی این تسک پیش آمده است، لطفا با ادمین تماس بگیرید', data['todo_pause_time'][i], {
-                        "closeButton": true,
-                        "debug": false,
-                        "progressBar": true,
-                        "preventDuplicates": false,
-                        "positionClass": "toast-top-right",
-                        "onclick": true,
-                        "showDuration": "400",
-                        "hideDuration": "1000",
-                        "timeOut": "10000",
-                        "extendedTimeOut": "1000",
-                        "showEasing": "swing",
-                        "hideEasing": "linear",
-                        "showMethod": "fadeIn",
-                        "hideMethod": "fadeOut"
-                    })
-                }
-            }
-        } else {
-            console.error("empty data of ajax")
+            return cookieValue;
         }
-    })
 
 
-    // todos handler part
-    // Filling the list of todos with values received from the backend
-    const incomplete = $('#todoIncomplete')
-    const progress = $('#todoProgress')
-    const complete = $('#todoComplete')
-    let list = {}
+        // a function for ajax handler to prevent multiple ajax in the code
+        function performAjaxRequest(url, data, onSuccess, method = "POST") {
+            const csrftoken = getCookie('csrftoken');
 
-    {% for todo in todo %}
-        {% if todo.stage == 'd' %}
-            {% if todo.type == 'f' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-fun" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% elif todo.type == 'l' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-low" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% elif todo.type == 'm' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-middle" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% elif todo.type == 'e' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-emergency" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% endif %}
-            list["todo_{{ todo.id }}"] = todo_{{ todo.id }}
-            incomplete.append(todo_{{ todo.id }});
-        {% endif %}
-        {% if todo.stage == 'p' %}
-            {% if todo.type == 'f' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-fun" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% elif todo.type == 'l' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-low" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% elif todo.type == 'm' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-middle" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% elif todo.type == 'e' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-emergency" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% endif %}
-            list["todo_{{ todo.id }}"] = todo_{{ todo.id }}
-            progress.append(todo_{{ todo.id }});
-        {% endif %}
-        {% if todo.stage == 'c' %}
-            {% if todo.type == 'f' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-fun" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% elif todo.type == 'l' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-low" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% elif todo.type == 'm' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-middle" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% elif todo.type == 'e' %}
-                const todo_{{ todo.id }} = `
-                    <div data-id={{ todo.id }} class="dragStart row-field back-emergency" draggable="true">
-                        <div class="container">
-                            <div class="row">
-                                <h2> {{ todo.title }} </h2>
-                            </div>
-                            <div class="row">
-                                <p> {{ todo.description }} </p>
-                            </div>
-                            <div class="row">
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
-                                    onclick="commentOnClick({{ todo.id }})">
-                                        <i class="fa fa-comment"></i>
-                                    </button>
-                                </div>
-                                <div class="col-6">
-                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
-                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            {% endif %}
-            list["todo_{{ todo.id }}"] = todo_{{ todo.id }}
-            complete.append(todo_{{ todo.id }});
-        {% endif %}
-    {% endfor %}
-
-    // todos drag and drop handler part
-    // dragover functions
-    function dragoverInComplete(ev) {
-        ev.preventDefault()
-        console.log('dragoverInComplete done!')
-    }
-
-    function dragoverProgress(ev) {
-        ev.preventDefault()
-        console.log('dragoverProgress done!')
-    }
-
-    function dragoverComplete(ev) {
-        ev.preventDefault()
-        console.log('dragoverComplete done!')
-    }
-
-    // drop functions
-    function dropInComplete(ev) {
-        ev.preventDefault()
-        let ajax_data;
-        const id = ev.dataTransfer.getData('id');
-
-        performAjaxRequest("{% url 'drop_management' %}", {id: id, position: 'd'}, function (data) {
-            ajax_data = Boolean(data)
-        })
-
-        if (ajax_data) {
-            $('#' + id).remove()
-            var inco = list['todo_' + id]
-            incomplete.append(inco);
-            $('.dragStart').on('dragstart', function (ev) {
-                var id = $(this).attr('data-id')
-                console.log('start and id = ', id)
-                ev.originalEvent.dataTransfer.setData('id', id)
+            $.ajax({
+                url: url,
+                method: method,
+                data: data,
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken); // Include the CSRF token in the headers
+                },
+                success: function (data, textStatus, jqXHR) {
+                    onSuccess(data);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.warn("Error");
+                    console.warn(errorThrown);
+                }
             });
         }
-        console.log('dropInComplete drop!', id)
-    }
 
-    function dropProgress(ev) {
-        ev.preventDefault()
-        let ajax_data;
-        const id = ev.dataTransfer.getData('id');
 
-        performAjaxRequest("{% url 'drop_management' %}", {id: id, position: 'p'}, function (data) {
-            ajax_data = Boolean(data)
+        // get the usefulness value from backend
+        performAjaxRequest("{% url 'usefulness' %}", {}, function (data) {
+            if (data) {
+                console.log(data)
+                console.log(data['usefulness'])
+                if (data['todo_time']) {
+                    for (let i = 0; i < data['todo_time'].length; i++) {
+                        console.log(data['todo_time'][i])
+                        toastr.error('خطایی هنگام محاسبه فرمول سودمندی این تسک پیش آمده است، لطفا با ادمین تماس بگیرید', data['todo_time'][i], {
+                            "closeButton": true,
+                            "debug": false,
+                            "progressBar": true,
+                            "preventDuplicates": false,
+                            "positionClass": "toast-top-right",
+                            "onclick": true,
+                            "showDuration": "400",
+                            "hideDuration": "1000",
+                            "timeOut": "10000",
+                            "extendedTimeOut": "1000",
+                            "showEasing": "swing",
+                            "hideEasing": "linear",
+                            "showMethod": "fadeIn",
+                            "hideMethod": "fadeOut"
+                        })
+                    }
+                }
+                if (data['todo_pause_time']) {
+                    for (let i = 0; i < data['todo_pause_time'].length; i++) {
+                        console.log(data['todo_pause_time'][i])
+                        toastr.error('خطایی هنگام محاسبه فرمول سودمندی این تسک پیش آمده است، لطفا با ادمین تماس بگیرید', data['todo_pause_time'][i], {
+                            "closeButton": true,
+                            "debug": false,
+                            "progressBar": true,
+                            "preventDuplicates": false,
+                            "positionClass": "toast-top-right",
+                            "onclick": true,
+                            "showDuration": "400",
+                            "hideDuration": "1000",
+                            "timeOut": "10000",
+                            "extendedTimeOut": "1000",
+                            "showEasing": "swing",
+                            "hideEasing": "linear",
+                            "showMethod": "fadeIn",
+                            "hideMethod": "fadeOut"
+                        })
+                    }
+                }
+            } else {
+                console.error("empty data of ajax")
+            }
+        })
+
+
+        // todos handler part
+        // Filling the list of todos with values received from the backend
+        const incomplete = $('#todoIncomplete')
+        const progress = $('#todoProgress')
+        const complete = $('#todoComplete')
+        let list = {}
+
+        {% for todo in todo %}
+            {% if todo.stage == 'd' %}
+                {% if todo.type == 'f' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-fun" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% elif todo.type == 'l' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-low" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% elif todo.type == 'm' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-middle" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% elif todo.type == 'e' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-emergency" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% endif %}
+                list["todo_{{ todo.id }}"] = todo_{{ todo.id }}
+                incomplete.append(todo_{{ todo.id }});
+            {% endif %}
+            {% if todo.stage == 'p' %}
+                {% if todo.type == 'f' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-fun" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% elif todo.type == 'l' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-low" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% elif todo.type == 'm' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-middle" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% elif todo.type == 'e' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-emergency" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% endif %}
+                list["todo_{{ todo.id }}"] = todo_{{ todo.id }}
+                progress.append(todo_{{ todo.id }});
+            {% endif %}
+            {% if todo.stage == 'c' %}
+                {% if todo.type == 'f' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-fun" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% elif todo.type == 'l' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-low" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% elif todo.type == 'm' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-middle" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% elif todo.type == 'e' %}
+                    const todo_{{ todo.id }} = `
+                    <div data-id={{ todo.id }} class="dragStart row-field back-emergency" draggable="true">
+                        <div class="container">
+                            <div class="row">
+                                <h2> {{ todo.title }} </h2>
+                            </div>
+                            <div class="row">
+                                <p> {{ todo.description }} </p>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12"
+                                    onclick="commentOnClick({{ todo.id }})">
+                                        <i class="fa fa-comment"></i>
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button data-id={{ todo.id }} class="btn btn-success col-12 playTaskButton" onclick="playTaskButton({{ todo.id }})" style="display: none;"><i class="fa fa-play"></i></button>
+                                    <button data-id={{ todo.id }} class="btn btn-primary col-12 pauseTaskButton" onclick="pauseTaskButton({{ todo.id }})"><i class="fa fa-pause"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                {% endif %}
+                list["todo_{{ todo.id }}"] = todo_{{ todo.id }}
+                complete.append(todo_{{ todo.id }});
+            {% endif %}
+        {% endfor %}
+
+        // todos drag and drop handler part
+        // dragover functions
+        function dragoverInComplete(ev) {
+            ev.preventDefault()
+            console.log('dragoverInComplete done!')
+        }
+
+        function dragoverProgress(ev) {
+            ev.preventDefault()
+            console.log('dragoverProgress done!')
+        }
+
+        function dragoverComplete(ev) {
+            ev.preventDefault()
+            console.log('dragoverComplete done!')
+        }
+
+        // drop functions
+        function dropInComplete(ev) {
+            ev.preventDefault()
+            let ajax_data;
+            const id = ev.dataTransfer.getData('id');
+
+            performAjaxRequest("{% url 'drop_management' %}", {id: id, position: 'd'}, function (data) {
+                ajax_data = Boolean(data)
+            })
+
             if (ajax_data) {
-                $('[data-id=' + id + ']').remove()
+                $('#' + id).remove()
                 var inco = list['todo_' + id]
-                progress.append(inco);
+                incomplete.append(inco);
                 $('.dragStart').on('dragstart', function (ev) {
                     var id = $(this).attr('data-id')
                     console.log('start and id = ', id)
                     ev.originalEvent.dataTransfer.setData('id', id)
                 });
             }
-        })
-        console.log('dropProgress drop!')
-    }
-
-    function dropComplete(ev) {
-        ev.preventDefault()
-        let ajax_data;
-        const id = ev.dataTransfer.getData('id');
-
-        performAjaxRequest("{% url 'drop_management' %}", {id: id, position: 'c'}, function (data) {
-            ajax_data = Boolean(data)
-            if (ajax_data) {
-                $('[data-id=' + id + ']').remove()
-                var inco = list['todo_' + id]
-                complete.append(inco);
-                $('.dragStart').on('dragstart', function (ev) {
-                    var id = $(this).attr('data-id')
-                    console.log('start and id = ', id)
-                    ev.originalEvent.dataTransfer.setData('id', id)
-                });
-            }
-        })
-        console.log('dropComplete drop!', ev)
-    }
-
-    // dragstart functions
-    $('.dragStart').on('dragstart', function (ev) {
-        const id = $(this).attr('data-id');
-        console.log('start and id = ', id)
-        ev.originalEvent.dataTransfer.setData('id', id)
-    });
-
-    $('#todo-btn').on('click', function () {
-        $('#todo-display').toggleClass('dis-hide')
-
-        if (!$('#gift-display').hasClass('dis-hide')) {
-            $('#gift-display').addClass('dis-hide')
+            console.log('dropInComplete drop!', id)
         }
 
-        if (!$('#report-display').hasClass('dis-hide')) {
-            $('#report-display').addClass('dis-hide')
-        }
-    })
+        function dropProgress(ev) {
+            ev.preventDefault()
+            let ajax_data;
+            const id = ev.dataTransfer.getData('id');
 
-    $('#gift-btn').on('click', function () {
-        $('#gift-display').toggleClass('dis-hide')
-
-        if (!$('#todo-display').hasClass('dis-hide')) {
-            $('#todo-display').addClass('dis-hide')
-        }
-
-        if (!$('#report-display').hasClass('dis-hide')) {
-            $('#report-display').addClass('dis-hide')
-        }
-    })
-
-    $('#report-btn').on('click', function () {
-        $('#gift-display').toggleClass('dis-hide')
-
-        if (!$('#todo-display').hasClass('dis-hide')) {
-            $('#todo-display').addClass('dis-hide')
+            performAjaxRequest("{% url 'drop_management' %}", {id: id, position: 'p'}, function (data) {
+                ajax_data = Boolean(data)
+                if (ajax_data) {
+                    $('[data-id=' + id + ']').remove()
+                    var inco = list['todo_' + id]
+                    progress.append(inco);
+                    $('.dragStart').on('dragstart', function (ev) {
+                        var id = $(this).attr('data-id')
+                        console.log('start and id = ', id)
+                        ev.originalEvent.dataTransfer.setData('id', id)
+                    });
+                }
+            })
+            console.log('dropProgress drop!')
         }
 
-        if (!$('#gift-display').hasClass('dis-hide')) {
-            $('#gift-display').addClass('dis-hide')
+        function dropComplete(ev) {
+            ev.preventDefault()
+            let ajax_data;
+            const id = ev.dataTransfer.getData('id');
+
+            performAjaxRequest("{% url 'drop_management' %}", {id: id, position: 'c'}, function (data) {
+                ajax_data = Boolean(data)
+                if (ajax_data) {
+                    $('[data-id=' + id + ']').remove()
+                    var inco = list['todo_' + id]
+                    complete.append(inco);
+                    $('.dragStart').on('dragstart', function (ev) {
+                        var id = $(this).attr('data-id')
+                        console.log('start and id = ', id)
+                        ev.originalEvent.dataTransfer.setData('id', id)
+                    });
+                }
+            })
+            console.log('dropComplete drop!', ev)
         }
-    })
+
+        // dragstart functions
+        $('.dragStart').on('dragstart', function (ev) {
+            const id = $(this).attr('data-id');
+            console.log('start and id = ', id)
+            ev.originalEvent.dataTransfer.setData('id', id)
+        });
 
 
-    // comments handler part
-    const list_author = [],
-        list_text = [],
-        list_timestamp = [];
-    let idGetBack;
+        // comments handler part
+        const list_author = [],
+            list_text = [],
+            list_timestamp = [];
+        let idGetBack;
 
-    function commentOnClick(id) {
-        idGetBack = id
-        console.log('get data id: ', id)
+        function commentOnClick(id) {
+            idGetBack = id
+            console.log('get data id: ', id)
 
-        performAjaxRequest("{% url 'open_comments' %}", {id: id}, function (data) {
-            console.log(data);
-            var author, text, time;
-            if ($('#comment').hasClass('dis-hide')) {
-                $('#comment').removeClass('dis-hide')
-                for (let i = 0; i < data.length; i++) {
-                    author = data[i].author
-                    text = data[i].text
-                    time = data[i].timestamp
-                    $('.card-body').append(`
+            performAjaxRequest("{% url 'open_comments' %}", {id: id}, function (data) {
+                console.log(data);
+                var author, text, time;
+                if ($('#comment').hasClass('dis-hide')) {
+                    $('#comment').removeClass('dis-hide')
+                    for (let i = 0; i < data.length; i++) {
+                        author = data[i].author
+                        text = data[i].text
+                        time = data[i].timestamp
+                        $('.card-body').append(`
                         <div class="media">
                             <div class="media-body">
                                 <h6 class="mt-0">` + author + `</h6>
@@ -609,30 +669,30 @@
                             <hr>
                         </div>
                     `)
+                    }
+                    console.log('if is true')
+                } else if (!$('#comment').hasClass('dis-hide')) {
+                    $('.media').remove()
+                    $('#comment').addClass('dis-hide')
+                    console.log('if is false')
+                } else {
+                    console.warn("Error");
                 }
-                console.log('if is true')
-            } else if (!$('#comment').hasClass('dis-hide')) {
-                $('.media').remove()
-                $('#comment').addClass('dis-hide')
-                console.log('if is false')
-            } else {
-                console.warn("Error");
-            }
-        })
-    }
+            })
+        }
 
-    $('#comment-submit-button').on('click', function () {
-        console.log('get data id: ', idGetBack)
-        event.preventDefault()
-        const text = $('#comment-text').val();
-        $('#comment-text').val('')
+        $('#comment-submit-button').on('click', function () {
+            console.log('get data id: ', idGetBack)
+            event.preventDefault()
+            const text = $('#comment-text').val();
+            $('#comment-text').val('')
 
-        performAjaxRequest("{% url 'add_comment' %}", {text: text, id: idGetBack}, function (data) {
-            console.log(data);
-            var author = data.author
-            var text = data.text
-            var time = data.time
-            $('.card-body').append(`
+            performAjaxRequest("{% url 'add_comment' %}", {text: text, id: idGetBack}, function (data) {
+                console.log(data);
+                var author = data.author
+                var text = data.text
+                var time = data.time
+                $('.card-body').append(`
                 <div class="media">
                     <div class="media-body">
                         <h6 class="mt-0">` + author + `</h6>
@@ -642,106 +702,107 @@
                     <hr>
                 </div>
             `)
+            })
         })
-    })
 
 
-    // activity play/pause handler part
-    const playButton = $("#playButton");
-    const pauseButton = $("#pauseButton");
+        // activity play/pause handler part
+        const playButton = $("#playButton");
+        const pauseButton = $("#pauseButton");
 
-    {% if pause.end_time == false and pause.start_time %}
-        pauseButton.hide();
-        playButton.show();
-    {% endif %}
-
-    playButton.on("click", function play() {
-        performAjaxRequest("{% url 'activity' %}", {status: 1}, function (data) {
-            if (data === 'Play') {
-                playButton.hide();
-                pauseButton.show();
-            }
-        });
-    });
-
-    pauseButton.on("click", function pause() {
-        performAjaxRequest("{% url 'activity' %}", {status: 0}, function (data) {
-            if (data === 'Pause') {
-                pauseButton.hide();
-                playButton.show();
-            }
-        });
-    });
-
-
-    // Task play/pause handler part
-    $(".pauseTaskButton").each(function (i, button) {
-        performAjaxRequest("{% url 'task_activity_check' %}", {id: $(button).data('id')}, function (data) {
-            if (data === 'Play') {
-                $(button).hide();
-                $(".playTaskButton").eq(i).show();
-            }
-        });
-    });
-
-    function playTaskButton(id) {
-        const playButton = $(`.playTaskButton[data-id="` + id + `"]`);
-
-        performAjaxRequest("{% url 'task_activity' %}", {id: id, status: 1}, function (data) {
-            if (data === 'Play') {
-                playButton.hide();
-                $(`.pauseTaskButton[data-id="` + id + `"]`).show();
-            }
-        });
-    }
-
-    function pauseTaskButton(id) {
-        const pauseButton = $(".pauseTaskButton[data-id='" + id + "']");
-
-        performAjaxRequest("{% url 'task_activity' %}", {id: id, status: 0}, function (data) {
-            if (data === 'Pause') {
-                pauseButton.hide();
-                $(".playTaskButton[data-id='" + id + "']").show();
-            }
-        });
-    }
-
-
-    // gift handler part
-    const giftSelf = $('#gift-self')
-    const giftAll = $('#gift-all')
-
-    {% for index in gifts %}
-        {% if index.user == request.user %}
-            giftSelf.append(`
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-10">
-                            <div class="back-gift row-field">
-                                <div class="container">
-                                    <h2>{{ index.title }}</h2>
-                                    <p>{{ index.description }} </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `)
-        {% elif index.user == false %}
-            giftAll.append(`
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-10">
-                            <div class="back-gift row-field">
-                                <div class="container">
-                                    <h2>{{ index.title }}</h2>
-                                    <p>{{ index.description }} </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `)
+        {% if pause.end_time == false and pause.start_time %}
+            pauseButton.hide();
+            playButton.show();
         {% endif %}
-    {% endfor %}
-</script>
+
+        playButton.on("click", function play() {
+            performAjaxRequest("{% url 'activity' %}", {status: 1}, function (data) {
+                if (data === 'Play') {
+                    playButton.hide();
+                    pauseButton.show();
+                }
+            });
+        });
+
+        pauseButton.on("click", function pause() {
+            performAjaxRequest("{% url 'activity' %}", {status: 0}, function (data) {
+                if (data === 'Pause') {
+                    pauseButton.hide();
+                    playButton.show();
+                }
+            });
+        });
+
+
+        // Task play/pause handler part
+        $(".pauseTaskButton").each(function (i, button) {
+            performAjaxRequest("{% url 'task_activity_check' %}", {id: $(button).data('id')}, function (data) {
+                if (data === 'Play') {
+                    $(button).hide();
+                    $(".playTaskButton").eq(i).show();
+                }
+            });
+        });
+
+        function playTaskButton(id) {
+            const playButton = $(`.playTaskButton[data-id="` + id + `"]`);
+
+            performAjaxRequest("{% url 'task_activity' %}", {id: id, status: 1}, function (data) {
+                if (data === 'Play') {
+                    playButton.hide();
+                    $(`.pauseTaskButton[data-id="` + id + `"]`).show();
+                }
+            });
+        }
+
+        function pauseTaskButton(id) {
+            const pauseButton = $(".pauseTaskButton[data-id='" + id + "']");
+
+            performAjaxRequest("{% url 'task_activity' %}", {id: id, status: 0}, function (data) {
+                if (data === 'Pause') {
+                    pauseButton.hide();
+                    $(".playTaskButton[data-id='" + id + "']").show();
+                }
+            });
+        }
+
+
+        // gift handler part
+        const giftSelf = $('#gift-self')
+        const giftAll = $('#gift-all')
+
+        {% for index in gifts %}
+            {% if index.user == request.user %}
+                giftSelf.append(`
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-10">
+                            <div class="back-gift row-field">
+                                <div class="container">
+                                    <h2>{{ index.title }}</h2>
+                                    <p>{{ index.description }} </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `)
+            {% elif index.user == false %}
+                giftAll.append(`
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-10">
+                            <div class="back-gift row-field">
+                                <div class="container">
+                                    <h2>{{ index.title }}</h2>
+                                    <p>{{ index.description }} </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `)
+            {% endif %}
+        {% endfor %}
+    </script>
+{% endblock %}

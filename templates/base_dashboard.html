@@ -1,0 +1,34 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title> User Dashboard </title>
+
+    {% include "includes/scripts.html" %}
+    {% include "includes/styles.html" %}
+
+    {% block style %}{% endblock %}
+    {% include "includes/same_styles.html" %}
+</head>
+<body>
+
+{% include "includes/notifications.html" %}
+
+<ul class="nav">
+    {% block navbar %}{% endblock %}
+</ul>
+
+
+<div class="container">
+    {% block body %}
+    {% endblock %}
+</div>
+
+{% block script %}{% endblock %}
+{% include 'includes/same_scripts.html' %}
+
+</body>
+
+</html>
