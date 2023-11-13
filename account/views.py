@@ -8,6 +8,8 @@ from datetime import datetime
 from work.models import *
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
+import os
+from django.conf import settings
 
 
 def login_logic(request, *args, **kwargs):
@@ -55,10 +57,22 @@ def login_logic(request, *args, **kwargs):
 
 def admin_dashboard(request, *args, **kwargs):
     context = {}
+
     if not request.user.is_staff:
         messages.warning(request, "نمیتونی داشبورد مدیر و ببینی")
         return redirect("user_dashboard")
     context["user"] = User.objects.all()
+
+    if request.method == "POST":
+        # file_path = os.path.join(settings.MEDIA_ROOT, path)
+        last_db_file_number = int(len(list(os.listdir("db_backups")))) - 1
+        last_db_file_name = list(os.listdir("db_backups"))[last_db_file_number]
+        file_path = os.path.join(settings.BASE_DIR, "db_backups/" + last_db_file_name)
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as fh:
+                response = HttpResponse(fh.read(), content_type="application/vnd.ms-excel")
+                response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+                return response
     return render(request, 'extends/admin_dashboard.html', context)
 
 

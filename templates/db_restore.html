@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Database Restore</title>
+
+    {% include "includes/scripts.html" %}
+    {% include "includes/styles.html" %}
+
+</head>
+<body>
+
+{% include "includes/notifications.html" %}
+
+<br>
+
+<div class="container d-flex justify-content-center align-items-center">
+    <div class="row">
+        <div class="d-flex flex-column">
+            <h1 class="text-center">
+                برگرداندن دیتابیس
+            </h1>
+            <p class="text-warning">
+                تا زمانی که دیتابیس رو برنگردونی سامانه کار نمیکنه!
+            </p>
+            <button id="db-restore" class="btn btn-primary justify-content-center">
+                Restore Database
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // a function for get cookie
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
+    // a function for ajax handler to prevent multiple ajax in the code
+    function performAjaxRequest(url, data, onSuccess, method = "POST") {
+        const csrftoken = getCookie('csrftoken');
+
+        $.ajax({
+            url: url,
+            method: method,
+            data: data,
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken); // Include the CSRF token in the headers
+            },
+            success: function (data, textStatus, jqXHR) {
+                onSuccess(data);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.warn("Error");
+                console.warn(errorThrown);
+            }
+        });
+    }
+
+
+    // handle button
+    $("#db-restore").click(function () {
+        performAjaxRequest("{% url 'database_handler' %}", {"status": "restore"}, function (data) {
+            console.log(data)
+        })
+    })
+</script>
+</body>
+</html>

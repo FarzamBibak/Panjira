@@ -1,7 +1,8 @@
 {% extends "base_dashboard.html" %}
 
 {% block style %}
-    <style></style>
+    <style>
+    </style>
 {% endblock %}
 
 {% block navbar %}
@@ -9,6 +10,7 @@
     <li class="nav-item"><a class="nav-link" id="gift-btn">Gifts</a></li>
     <li class="nav-item"><a class="nav-link" id="report-btn">Reports</a></li>
     <li class="nav-item"><a class="nav-link" id="lottery-btn">Lottery</a></li>
+    <li class="nav-item"><a class="nav-link" id="database-backup-btn">Database Backup</a></li>
     {% if not request.user.is_staff %}
         <li class="nav-item align-self-center" style="position:absolute; right: 103px">
             <div class="play-pause">
@@ -33,7 +35,7 @@
     </div>
 
     <div class="row">
-        <div id="lottery-display" class="">
+        <div id="lottery-display" class="dis-hide">
             <div class="row">
                 <div id="lottery" class="lottery-column col-10" style="border: 1px solid red">
 
@@ -42,6 +44,29 @@
         </div>
     </div>
 
+    <div class="row">
+        <div id="db-backup-display" class="">
+            <div class="row">
+                <div class="d-flex align-items-center flex-column">
+                    <form method="post" class="col-2">
+                        {% csrf_token %}
+                        <button type="button" id="db-backup" class="btn btn-primary col-12" style="margin: 20px">
+                            DB
+                            Backup
+                        </button>
+                        <button type="button" id="db-auto-backup" class="btn btn-primary col-12" style="margin: 20px">
+                            DB
+                            Auto
+                            Backup
+                        </button>
+                        <button type="submit" class="btn btn-primary col-12" style="margin: 20px">
+                            Download
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block script %}
@@ -91,6 +116,20 @@
                 console.log(index + ":", data[index])
             }
             console.log(data)
+        })
+
+
+        // handle the backup options
+        $("#db-backup").click(function () {
+            performAjaxRequest("{% url 'database_handler' %}", {"status": "backup"}, function (data) {
+                console.log(data)
+            })
+        })
+
+        $("#db-auto-backup").click(function () {
+            performAjaxRequest("{% url 'database_handler' %}", {"status": "auto_backup"}, function (data) {
+                console.log(data)
+            })
         })
     </script>
 {% endblock %}

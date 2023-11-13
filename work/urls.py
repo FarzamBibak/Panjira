@@ -10,4 +10,6 @@ urlpatterns = [
     path('task_pause_check/', task_pause_check, name="task_activity_check"),
     path('usefulness/', usefulness_calculate, name="usefulness"),
     path('lottery/', gift_lottery, name="lottery"),
+    path('db/', db_handler, name="database_handler"),
+    # path('download/', download, name="download")
 ]

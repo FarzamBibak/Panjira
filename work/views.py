@@ -1,13 +1,15 @@
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect, Http404
 from django.urls import reverse
 
 from work.models import ToDo, Comment, TaskPause, Pause
 from datetime import datetime
 from django.contrib import messages
 from django.contrib.auth.models import User
-import random
+import random, os
 from account.forms import *
+from django.shortcuts import redirect
+from django.conf import settings
 
 
 def activity(request, *args, **kwargs):
@@ -191,3 +193,50 @@ def gift_lottery(request, *args, **kwargs):
                     users_pk_list[index.id] = index.username
                 print(users_pk_list)
                 return JsonResponse(users_pk_list)
+
+
+def db_handler(request, *args, **kwargs):
+    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+        try:
+            if request.POST.get("status") == "backup":
+                if os.path.exists(os.path.join(settings.BASE_DIR, "db.sqlite3")):
+                    os.system("python.exe manage.py dbbackup")
+                    messages.success(request, "بک آپ دیتا بیس گرفته شد")
+                    return redirect(reverse("admin_dashboard"))
+                else:
+                    messages.error(request, "دیتابیسی نداری که ازش بک اپ بگیری")
+                    return redirect(reverse("database_handler"))
+            elif request.POST.get("status") == "auto_backup":
+                if os.path.exists(os.path.join(settings.BASE_DIR, "db.sqlite3")):
+                    os.system("python.exe manage.py auto_db_backup")
+                    # messages.success(request, "بک آپ دیتا بیس گرفته شد")
+                    # return redirect(reverse("admin_dashboard"))\
+                    return HttpResponse(True)
+                else:
+                    messages.error(request, "دیتابیسی نداری که ازش بک اپ بگیری")
+                    return redirect(reverse("database_handler"))
+            elif request.POST.get("status") == "restore":
+                path_db_restore = str(settings.DBBACKUP_STORAGE_OPTIONS['location'])
+                count_db_restores = len(os.listdir(path_db_restore))
+                if count_db_restores == 0:
+                    messages.error(request, "فایل بک آپ دیتا بیس وجود نداره")
+                    return redirect(reverse("database_handler"))
+                os.system("python.exe manage.py dbrestore")
+                os.system("Y")
+                messages.success(request, "دیتا بیس برگشت :)")
+                return redirect(reverse("login"))
+        except:
+            messages.error(request, "خطا بوجود اومده، به ادمین بگو چک کنه :)")
+            return redirect(reverse("admin_dashboard"))
+    return render(request, "db_restore.html")
+
+
+# def download(request):
+#     if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+#         # file_path = os.path.join(settings.MEDIA_ROOT, path)
+#         file_path = os.path.join(settings.BASE_DIR, "db_backups/default-DESKTOP-IBOP86Q-2023-11-13-104221.dump")
+#         if os.path.exists(file_path):
+#             with open(file_path, 'rb') as fh:
+#                 response = HttpResponse(fh.read(), content_type="application/vnd.ms-excel")
+#                 response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+#                 return response
